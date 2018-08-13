@@ -85,11 +85,10 @@ class Preprocess:
             print("transforming data to supervised data...")
 
         columns = pd.DataFrame()
-        for x in reversed(range(1, STEPS + 1)):
-            aux = pd.DataFrame({'x': self.data[:, 0]}).shift(x)
-            columns['x'+str(x)] = aux.x
+        for xr in reversed(range(1, STEPS + 1)):
+            aux = pd.DataFrame({'x': self.data[:, 0]}).shift(xr)
+            columns['x'+str(xr)] = aux.x
         columns.fillna(0, inplace=True)
-        columns['x'] = columns[['x' + str(x) for x in range(1, STEPS + 1)]].values.tolist()
         columns['y'] = self.data[:,0]
         self.data = columns
         self.data.fillna(0, inplace=True)
@@ -106,8 +105,14 @@ class Preprocess:
             print("splitting data...")
 
         split = round(len(self.data) * SPLIT)
-
-        train, test = self.data[['x', 'y']][:split], self.data[['x', 'y']][split:]
+        train = {
+            'x': np.array(self.data[['x' + str(x) for x in range(1, STEPS + 1)]].values)[:split],
+            'y': self.data['y'][:split]
+        }
+        test = {
+            'x': np.array(self.data[['x' + str(x) for x in range(1, STEPS + 1)]].values)[split:],
+            'y': self.data['y'][split:]
+        }
         
         if self.verbose >= 2:
             plot_data(train, 'train split')

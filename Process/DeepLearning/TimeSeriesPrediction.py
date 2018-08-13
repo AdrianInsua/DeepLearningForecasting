@@ -19,11 +19,10 @@ class TimeSeriesPrediction:
     def __init__(self, train, test, v):
         self.verbose = v
         self.model = None
-        self.x_train, self.y_train = train.x, np.asarray(train.y)
-        self.x_test, self.y_test = test.x, np.asarray(test.y)
-        self.x_train = np.reshape(self.x_train.values, (self.x_train.shape[0], 1, 2))
-        print(self.x_train)
-        self.x_test = np.reshape(self.x_test.values, (self.x_test.shape[0], 1, 1))
+        self.x_train, self.y_train = train['x'], train['y']
+        self.x_test, self.y_test = test['x'], test['y']
+        self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], 1, self.x_train.shape[1]))
+        self.x_test = np.reshape(self.x_test, (self.x_test.shape[0], 1, self.x_test.shape[1]))
 
         self.create_model()
 
