@@ -6,9 +6,10 @@
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras import optimizers
 from keras import callbacks
 import numpy as np
-from config import BATCH_SIZE, NEURONS, NB_EPOCH
+from config import BATCH_SIZE, NEURONS, NB_EPOCH, LR, STEPS
 import matplotlib.pyplot as plt
 
 np.random.seed(7)
@@ -18,9 +19,10 @@ class TimeSeriesPrediction:
     def __init__(self, train, test, v):
         self.verbose = v
         self.model = None
-        self.x_train, self.y_train = train.x, train.y
-        self.x_test, self.y_test = test.x, test.y
-        self.x_train = np.reshape(self.x_train.values, (self.x_train.shape[0], 1, 1))
+        self.x_train, self.y_train = train.x, np.asarray(train.y)
+        self.x_test, self.y_test = test.x, np.asarray(test.y)
+        self.x_train = np.reshape(self.x_train.values, (self.x_train.shape[0], 1, 2))
+        print(self.x_train)
         self.x_test = np.reshape(self.x_test.values, (self.x_test.shape[0], 1, 1))
 
         self.create_model()
@@ -29,9 +31,10 @@ class TimeSeriesPrediction:
         """Create prediction model"""
 
         self.model = Sequential()
-        self.model.add(LSTM(NEURONS, batch_input_shape=(BATCH_SIZE, self.x_train.shape[1], self.x_train.shape[2])))
+        self.model.add(LSTM(NEURONS, input_shape=(self.x_train.shape[1], self.x_train.shape[2])))
         self.model.add(Dense(1))
-        self.model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=['accuracy'])
+        adam = optimizers.adam(lr=LR)
+        self.model.compile(loss='mae', optimizer=adam, metrics=['accuracy'])
 
     def predict(self):
         """walk-forward validation on the test data"""
@@ -45,14 +48,14 @@ class TimeSeriesPrediction:
             plt.show()
 
     def train(self):
-        """Fit an LSTM network to training data"""
+        """Fit a LSTM network to train data"""
 
         if self.verbose >= 1:
             print('Training model...')
 
         cbks = [callbacks.EarlyStopping(monitor='val_loss', patience=24)]
         hist = self.model.fit(self.x_train, self.y_train, epochs=NB_EPOCH,\
-         batch_size=BATCH_SIZE, callbacks=cbks,\
+         callbacks=cbks, shuffle=False, batch_size=BATCH_SIZE, \
         #  validation_data=(self.x_test, self.y_test),\
         validation_split=.15,\
         verbose=1 if self.verbose >= 1 else 0)

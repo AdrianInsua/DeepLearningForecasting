@@ -1,6 +1,7 @@
 """Main class"""
 # Data transformation libraries
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Service modules
 from Database.Database import Database
@@ -55,6 +56,9 @@ def main():
         db_conn.close()
     elif ARGS.source == "csv":
         data_corpus = pd.read_csv(filepath_or_buffer=ARGS.input_file)
+        if VERB >= 2:
+            data_corpus.plot()
+            plt.show()
 
     # Prediction process
     predict_data(data_corpus)

@@ -37,6 +37,9 @@ class Preprocess:
         self.data = self.data.set_index('ID_FECHA')
         self.data = self.data.groupby(pd.TimeGrouper(freq=group)).sum()
 
+        if self.verbose >= 2:
+            plot_data(self.data, 'grouped data')
+
     def decompose_seasonality(self):
         """decomponse data seasonality"""
 
@@ -56,6 +59,7 @@ class Preprocess:
         self.data['resid'].fillna(method='bfill', inplace=True)
 
         if self.verbose >= 2:
+            plot_data(self.data, 'seasonality data')
             result.plot()
             plt.show()
 
@@ -71,19 +75,29 @@ class Preprocess:
         self.scaled = self.scaler.fit_transform(values)
         self.data = self.scaled
 
+        if self.verbose >= 2:
+            plot_data(self.data, 'scaled data', 'scaled data')
+
     def timeseries_to_supervised(self):
         """Convert timeseries to supervised"""
 
         if self.verbose >= 1:
             print("transforming data to supervised data...")
 
-        columns = pd.DataFrame({'x': self.data[:, 0]}).shift(STEPS)
+        columns = pd.DataFrame()
+        for x in reversed(range(1, STEPS + 1)):
+            aux = pd.DataFrame({'x': self.data[:, 0]}).shift(x)
+            columns['x'+str(x)] = aux.x
+        columns.fillna(0, inplace=True)
+        columns['x'] = columns[['x' + str(x) for x in range(1, STEPS + 1)]].values.tolist()
         columns['y'] = self.data[:,0]
         self.data = columns
         self.data.fillna(0, inplace=True)
+        print(self.data)
 
         if self.verbose >= 2:
             print('Timeseries data: \n', self.data)
+            plot_data(self.data, 'timeseries data')
 
     def split_data(self):
         """Split data into train and test"""
@@ -94,12 +108,28 @@ class Preprocess:
         split = round(len(self.data) * SPLIT)
 
         train, test = self.data[['x', 'y']][:split], self.data[['x', 'y']][split:]
+        
+        if self.verbose >= 2:
+            plot_data(train, 'train split')
+            plot_data(test, 'test split')
         return train, test
 
 def series_to_supervised(dataset, look_back):
-    dataX, dataY = [], []
+    """transform timeseries into supervised"""
+    data_x, data_y = [], []
     for i in range(len(dataset) - look_back):
         a = dataset[i:(i + look_back), 0]
-        dataX.append(a)
-        dataY.append(dataset[i + look_back, 0])
-    return np.array(dataX), np.array(dataY)
+        data_x.append(a)
+        data_y.append(dataset[i + look_back, 0])
+    return np.array(data_x), np.array(data_y)
+
+
+def plot_data(data, title, label=''):
+    """plot data"""
+    plt.title(title)
+    if data is pd:
+        data.plot()
+    else:
+        plt.plot(data, label=label)
+    plt.legend()
+    plt.show()

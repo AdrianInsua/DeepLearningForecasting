@@ -1,9 +1,10 @@
 """Global variables"""
 
-STEPS = 1 			# Configure data window
-NEURONS = 64 		# Neurons to use in model
-BATCH_SIZE = 64 	# Batch size to improve performance
-NB_EPOCH = 100 		# Training epochs
+STEPS = 2 			# Configure data window
+NEURONS = 128 		# Neurons to use in model
+BATCH_SIZE = 128 	# Batch size to improve performance
+NB_EPOCH = 200 		# Training epochs
+LR = 0.005			# Learning rate
 TRSH = .7			# Clasificaton trheshold
 SPLIT = .8			# data spliting percentage
 
@@ -15,6 +16,6 @@ SEASONALITY = True	# decompose seasonality
 PRELOAD = False		# preload model
 TRAIN = True		# train model
 PREDICT = True		# make predictions
-VERBOSE = 2			# verbose level
+VERBOSE = 1			# verbose level
 MODE = 'LSTM'		# type of model
 FIELD = 'IMPORTE'	# field with relevant data
