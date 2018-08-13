@@ -1,17 +1,18 @@
 """Global variables"""
 
 STEPS = 2 			# Configure data window
-NEURONS = 128 		# Neurons to use in model
+LAYERS = 2			# Capas de la red
+NEURONS = 4 		# Neurons to use in model
 BATCH_SIZE = 128 	# Batch size to improve performance
-NB_EPOCH = 200 		# Training epochs
-LR = 0.005			# Learning rate
+NB_EPOCH = 1000 		# Training epochs
+LR = 0.0001			# Learning rate
 TRSH = .7			# Clasificaton trheshold
-SPLIT = .8			# data spliting percentage
+SPLIT = .85			# data spliting percentage
 
 """ User variables - also setted by command prompt """
 PREPROCESS = True	# preprocess
 GROUP = True		# grouping function
-GROUP_BY = 'M'		# grouping criteria
+GROUP_BY = 'W'		# grouping criteria
 SEASONALITY = True	# decompose seasonality
 PRELOAD = False		# preload model
 TRAIN = True		# train model

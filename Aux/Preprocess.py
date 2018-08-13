@@ -107,16 +107,16 @@ class Preprocess:
         split = round(len(self.data) * SPLIT)
         train = {
             'x': np.array(self.data[['x' + str(x) for x in range(1, STEPS + 1)]].values)[:split],
-            'y': self.data['y'][:split]
+            'y': np.array(self.data['y'].values)[:split]
         }
         test = {
             'x': np.array(self.data[['x' + str(x) for x in range(1, STEPS + 1)]].values)[split:],
-            'y': self.data['y'][split:]
+            'y': np.array(self.data['y'].values)[split:]
         }
         
         if self.verbose >= 2:
-            plot_data(train, 'train split')
-            plot_data(test, 'test split')
+            plot_data(train['x'], 'train split')
+            plot_data(test['x'], 'test split')
         return train, test
 
 def series_to_supervised(dataset, look_back):
