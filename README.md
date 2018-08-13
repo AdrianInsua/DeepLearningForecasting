@@ -2,9 +2,9 @@
 Repository for machine learning and deep learning forecasting
 
 ### Requirements
-KERAS
-Python 3.6
-ScikitLearn
+- KERAS
+- Python 3.6
+- ScikitLearn
 
 
 ### Configuration
