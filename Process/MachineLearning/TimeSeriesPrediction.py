@@ -63,3 +63,5 @@ class TimeSeriesPrediction:
             plt.plot(self.y_test, label='true')
             plt.legend()
             plt.show()
+        
+        return pred

@@ -11,6 +11,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from statsmodels.tsa.seasonal import seasonal_decompose
 import matplotlib.pyplot as plt
+import pdb
 
 from config import SPLIT, STEPS
 
@@ -23,7 +24,12 @@ class Preprocess:
         self.scaler = {}
         self.verbose = v
 
-    def group_by(self, group='M'):
+    def change_field(self, field):
+        """reasing field value"""
+
+        self.field = field
+
+    def group_by(self, group='W'):
         """grouping method"""
 
         if self.verbose >= 1:
@@ -73,30 +79,36 @@ class Preprocess:
         values = values.astype('float64')
         self.scaler = MinMaxScaler(feature_range=(0, 1))
         self.scaled = self.scaler.fit_transform(values)
-        self.data = self.scaled
 
         if self.verbose >= 2:
             plot_data(self.data, 'scaled data', 'scaled data')
+
+    def rescale_data(self, pred):
+        """transform data to original range"""
+
+        if self.verbose >= 1:
+            print("Rescaling data...")
+
+        return self.scaler.inverse_transform(pred.reshape(-1, 1))
 
     def timeseries_to_supervised(self):
         """Convert timeseries to supervised"""
 
         if self.verbose >= 1:
             print("transforming data to supervised data...")
-
+        # pdb.set_trace()
         columns = pd.DataFrame()
         for xr in reversed(range(1, STEPS + 1)):
-            aux = pd.DataFrame({'x': self.data[:, 0]}).shift(xr)
+            aux = pd.DataFrame({'x': self.scaled[:, 0]}).shift(xr)
             columns['x'+str(xr)] = aux.x
         columns.fillna(0, inplace=True)
-        columns['y'] = self.data[:,0]
-        self.data = columns
-        self.data.fillna(0, inplace=True)
-        print(self.data)
+        columns['y'] = self.scaled[:,0]
+        self.scaled = columns[:-STEPS + 1]
+        self.scaled.fillna(0, inplace=True)
 
         if self.verbose >= 2:
-            print('Timeseries data: \n', self.data)
-            plot_data(self.data, 'timeseries data')
+            print('Timeseries data: \n', self.scaled)
+            plot_data(self.scaled, 'timeseries data')
 
     def split_data(self):
         """Split data into train and test"""
@@ -104,14 +116,14 @@ class Preprocess:
         if self.verbose >= 1:
             print("splitting data...")
 
-        split = round(len(self.data) * SPLIT)
+        split = round(len(self.scaled) * SPLIT)
         train = {
-            'x': np.array(self.data[['x' + str(x) for x in range(1, STEPS + 1)]].values)[:split],
-            'y': np.array(self.data['y'].values)[:split]
+            'x': np.array(self.scaled[['x' + str(x) for x in reversed(range(1, STEPS + 1))]].values)[:split],
+            'y': np.array(self.scaled['y'].values)[:split]
         }
         test = {
-            'x': np.array(self.data[['x' + str(x) for x in range(1, STEPS + 1)]].values)[split:],
-            'y': np.array(self.data['y'].values)[split:]
+            'x': np.array(self.scaled[['x' + str(x) for x in reversed(range(1, STEPS + 1))]].values)[split:],
+            'y': np.array(self.scaled['y'].values)[split:]
         }
         
         if self.verbose >= 2:

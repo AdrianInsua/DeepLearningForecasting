@@ -2,7 +2,7 @@
 # Data transformation libraries
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import pdb
 # Service modules
 from Database.Database import Database
 from Service.EntregasService import EntregasService
@@ -17,7 +17,7 @@ from Process.Prediction import Prediction
 from Aux.ArgumentsHelper import get_arguments
 
 # Global variables
-from config import PREPROCESS, PRELOAD, TRAIN, PREDICT, VERBOSE, MODE, FIELD, GROUP
+from config import PREPROCESS, PRELOAD, TRAIN, PREDICT, VERBOSE, MODE, FIELD, GROUP, SEASONALITY
 
 def predict_data(data_corpus):
     """Predict method"""
@@ -27,16 +27,33 @@ def predict_data(data_corpus):
     pred = Prediction(data_corpus, ARGS.mode or MODE, ARGS.data_field or FIELD, VERB)
 
     if ARGS.preprocess or PREPROCESS:
-        pred.preprocess(GROUP, False, True, True, True)
+        pred.preprocess(GROUP, SEASONALITY, True, True, True)
 
     pred.init_model()
 
-    if ARGS.preload or PRELOAD:
-        pred.load_pretrained()
-    if ARGS.train or TRAIN:
-        pred.train()
-    if ARGS.predict or PREDICT:
-        pred.predict()
+    preds = []
+
+    if SEASONALITY is False:    
+        if ARGS.preload or PRELOAD:
+            pred.load_pretrained()
+        if ARGS.train or TRAIN:
+            pred.train()
+        if ARGS.predict or PREDICT:
+            pred.predict()
+    
+    if SEASONALITY is True:
+        for x in ['seasonal', 'trend', 'resid']:
+            pred.preprocess_seasonality(x, True, True, True)
+            if ARGS.preload or PRELOAD:
+                pred.load_pretrained()
+            if ARGS.train or TRAIN:
+                pred.train()
+            if ARGS.predict or PREDICT:
+                preds.append(pred.predict())
+        pred.show_pred_seasonality(preds[0]*preds[1]*preds[2])
+    
+    pdb.set_trace()
+    print(preds)
 
 def pca(data_corpus):
     """PCA method"""
