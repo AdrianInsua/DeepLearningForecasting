@@ -10,7 +10,7 @@ from Aux.Preprocess import Preprocess
 from Process.DeepLearning.TimeSeriesPrediction import TimeSeriesPrediction
 
 # machine learning
-from Process.MachineLearning.svr import TimeSeriesSVR
+from Process.MachineLearning.TimeSeriesPrediction import TimeSeriesPrediction as TSM
 
 from config import GROUP_BY
 
@@ -40,11 +40,11 @@ class Prediction:
     
     def init_model(self):
         """Initialize model"""
-
-        if self.mode == 'LSTM':
+        print(self.mode)
+        if self.mode == 'DEEP':
             self.algorithm = TimeSeriesPrediction(self.train_data, self.test_data, self.verbose)
-        else:
-            self.algorithm = TimeSeriesSVR(self.data)
+        elif self.mode == 'ML':
+            self.algorithm = TSM(self.train_data, self.test_data, self.verbose)
 
     def train(self):
         """Model training"""

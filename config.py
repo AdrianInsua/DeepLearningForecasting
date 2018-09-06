@@ -1,8 +1,7 @@
 """Global variables"""
-
-STEPS = 2 			# Configure data window
-LAYERS = 2			# Capas de la red
-NEURONS = 4 		# Neurons to use in model
+STEPS = 1 			# Configure data window
+LAYERS = 20			# Capas de la red
+NEURONS = 30 		# Neurons to use in model
 BATCH_SIZE = 128 	# Batch size to improve performance
 NB_EPOCH = 1000 		# Training epochs
 LR = 0.0001			# Learning rate
@@ -18,5 +17,6 @@ PRELOAD = False		# preload model
 TRAIN = True		# train model
 PREDICT = True		# make predictions
 VERBOSE = 1			# verbose level
-MODE = 'LSTM'		# type of model
+MODE = 'DEEP'		# type of model
+MODEL = 'LSTM'		# model to use
 FIELD = 'IMPORTE'	# field with relevant data

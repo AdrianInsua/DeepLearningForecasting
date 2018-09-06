@@ -9,9 +9,13 @@ from keras.layers import LSTM
 from keras.layers import ConvLSTM2D
 from keras import optimizers
 from keras import callbacks
+
+# Common libraries
 import numpy as np
-from config import BATCH_SIZE, NEURONS, NB_EPOCH, LR, STEPS, LAYERS, MODE
 import matplotlib.pyplot as plt
+
+# Global variables
+from config import BATCH_SIZE, NEURONS, NB_EPOCH, LR, STEPS, LAYERS, MODE, MODEL
 
 np.random.seed(7)
 
@@ -31,10 +35,10 @@ class TimeSeriesPrediction:
         """Create prediction model"""
 
         self.model = Sequential()
-        if MODE == 'LSTM':
+        if MODEL == 'LSTM':
             for x in reversed(range(0, LAYERS)):
                 self.model.add(LSTM(NEURONS, input_shape=(self.x_train.shape[1], self.x_train.shape[2]), return_sequences=x > 0))
-        elif MODE == 'CNN':
+        elif MODEL == 'CNN':
             self.model.add(ConvLSTM2D(5, 5))
         self.model.add(Dense(1))
         adam = optimizers.adam(lr=LR)

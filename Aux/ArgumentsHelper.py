@@ -26,7 +26,7 @@ def get_arguments():
 
 
     pred_group = parser.add_argument_group('predictor options')
-    pred_group.add_argument('--mode', '-m', type=str, default='LSTM', help='tipo de algoritmo, machine learning, o deep learning [\'machine\' | \'deep\']')
+    pred_group.add_argument('--mode', '-m', type=str, help='tipo de algoritmo, machine learning, o deep learning [\'machine\' | \'deep\']')
     pred_group.add_argument('--preprocess', '-prep', type=bool, help='Activate data preprocessing')
     pred_group.add_argument('--preload', '-prl', type=bool, help='Prelaod previous model')
     pred_group.add_argument('--train', '-tr', type=bool, help='Activate train model method')
