@@ -10,13 +10,14 @@ SPLIT = .7			# data spliting percentage
 
 """ User variables - also setted by command prompt """
 PREPROCESS = True	# preprocess
-GROUP = True		# grouping function
+GROUP = False		# grouping function
 GROUP_BY = 'D'		# grouping criteria
-SEASONALITY = True	# decompose seasonality
+SEASONALITY = False	# decompose seasonality
 PRELOAD = True		# preload model
 TRAIN = True		# train model
+EVALUATE = True		# evaluate model
 PREDICT = True		# make predictions
 VERBOSE = 1			# verbose level
 MODE = 'DEEP'		# type of model
 MODEL = 'LSTM'		# model to use
-FIELD = 'IMPORTE'	# field with relevant data
+FIELD = 'STK'	# field with relevant data

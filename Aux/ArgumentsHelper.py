@@ -30,6 +30,7 @@ def get_arguments():
     pred_group.add_argument('--preprocess', '-prep', type=bool, help='Activate data preprocessing')
     pred_group.add_argument('--preload', '-prl', type=bool, help='Prelaod previous model')
     pred_group.add_argument('--train', '-tr', type=bool, help='Activate train model method')
+    pred_group.add_argument('--evaluate', '-ev', type=bool, help='Activate evaluation on model')
     pred_group.add_argument('--predict', '-pred', type=bool, help='Activate prediction on model')
     args = parser.parse_args()
 

@@ -17,7 +17,7 @@ from Process.Prediction import Prediction
 from Aux.ArgumentsHelper import get_arguments
 
 # Global variables
-from config import PREPROCESS, PRELOAD, TRAIN, PREDICT, VERBOSE, MODE, FIELD, GROUP, SEASONALITY
+from config import PREPROCESS, PRELOAD, TRAIN, EVALUATE, PREDICT, VERBOSE, MODE, FIELD, GROUP, SEASONALITY
 
 def predict_data(data_corpus):
     """Predict method"""
@@ -38,6 +38,8 @@ def predict_data(data_corpus):
             pred.load_pretrained()
         if ARGS.train or TRAIN:
             pred.train()
+        if ARGS.evaluate or EVALUATE:
+            pred.evaluate()
         if ARGS.predict or PREDICT:
             pred.predict()
     
@@ -48,12 +50,11 @@ def predict_data(data_corpus):
                 pred.load_pretrained()
             if ARGS.train or TRAIN:
                 pred.train()
+            if ARGS.evaluate or EVALUATE:
+                pred.evaluate()
             if ARGS.predict or PREDICT:
                 preds.append(pred.predict())
         pred.show_pred_seasonality(preds[0]*preds[1]*preds[2])
-    
-    pdb.set_trace()
-    print(preds)
 
 def pca(data_corpus):
     """PCA method"""

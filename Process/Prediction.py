@@ -15,16 +15,20 @@ from Process.MachineLearning.TimeSeriesPrediction import TimeSeriesPrediction as
 # plot
 import matplotlib.pyplot as plt
 
+import numpy as np
+
 from config import GROUP_BY, STEPS
 
 class Prediction:
     """ Factory """
     def __init__(self, data, mode, field, v):
         self.data = data
+        self.pred_data = data[-14:]
         self.train_data, self.test_data = data, data
         self.verbose = v
-        self.pre = Preprocess(data[STEPS:-STEPS], field, v)
+        self.pre = Preprocess(data, field, v)
         self.mode = mode
+        self.scaler = None
         self.algorithm = None
 
     def preprocess(self, group, decompose, scale, supervised, split):
@@ -35,11 +39,13 @@ class Prediction:
         if decompose:
             self.pre.decompose_seasonality()
         if scale:
-            self.pre.scale_data()
+            self.scaler, scaled = self.pre.scale_data()
         if supervised:
             self.pre.timeseries_to_supervised()
         if split:
             self.train_data, self.test_data = self.pre.split_data()
+
+        self.pred_data = scaled[-12:]
 
     def preprocess_seasonality(self, field, scale, supervised, split):
         """Preprocess seasonality data"""
@@ -65,10 +71,27 @@ class Prediction:
 
         self.algorithm.train()
 
+    def evaluate(self):
+        """Evaluate on test data"""
+
+        pred = self.algorithm.predict(self.test_data['x'], self.test_data['y'], self.scaler)
+
+        return self.pre.rescale_data(pred)
+
     def predict(self):
         """Predict data"""
 
-        pred = self.algorithm.predict()
+        ts_data = self.pre.pred_to_supervised(self.pred_data)
+        print(ts_data)
+
+        pred = {
+            'x': np.array(ts_data[['x' + str(x) for x in range(0, STEPS)]].values),
+            'y': np.array(ts_data['y'].values)
+        }
+
+        print(pred)
+
+        pred = self.algorithm.predict(pred['x'], pred['y'], self.scaler)
 
         return self.pre.rescale_data(pred)
 

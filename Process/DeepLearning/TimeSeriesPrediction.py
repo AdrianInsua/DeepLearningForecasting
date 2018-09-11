@@ -13,7 +13,10 @@ from keras import callbacks
 
 # Common libraries
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+
+import pdb
 
 # Global variables
 from config import BATCH_SIZE, NEURONS, NB_EPOCH, LR, STEPS, LAYERS, MODE, MODEL
@@ -54,18 +57,23 @@ class TimeSeriesPrediction:
         adam = optimizers.adam(lr=LR)
         self.model.compile(loss='mae', optimizer='adam', metrics=['accuracy'])
 
-    def predict(self):
+    def predict(self, prev, true, scaler):
         """walk-forward validation on the test data"""
+        prev = np.reshape(prev, (prev.shape[0], 1, prev.shape[1]))
+        yhat = self.model.predict(prev)
 
-        yhat = self.model.predict(self.x_test)
+        print(true)
+        print(yhat)
+        yhat = pd.DataFrame(yhat).shift(-1)
+        yhat.fillna(0, inplace=True)
 
-        if self.verbose >= 2:
-            plt.plot(yhat, label='predict')
-            plt.plot(self.y_test, label='true')
+        if self.verbose >= 1:
+            plt.plot(scaler.inverse_transform(yhat.values), label='predict')
+            plt.plot(scaler.inverse_transform(true), label='true')
             plt.legend()
             plt.show()
 
-        return yhat
+        return yhat.values
 
     def train(self):
         """Fit a LSTM network to train data"""
@@ -80,7 +88,7 @@ class TimeSeriesPrediction:
         validation_data=(self.x_test, self.y_test),\
         verbose=1 if self.verbose >= 1 else 0)
         
-        if self.verbose >= 2:
+        if self.verbose >= 1:
             plt.figure(1)
             plt.subplot(211)
             plt.plot(hist.history['acc'], label='acc')

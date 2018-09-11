@@ -8,10 +8,13 @@ from sklearn.model_selection import GridSearchCV
 
 # common libraries
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 # global variables
 from config import MODEL
+
+import pdb
 
 parameters = {'C': [1,10,100]}
 
@@ -57,6 +60,8 @@ class TimeSeriesPrediction:
             print('Predicting data...')
 
         pred = self.model.predict(self.x_test)
+        pdb.set_trace()
+        pred = pd.DataFrame(pred).shift(-3).values
 
         if self.verbose >= 1:
             plt.plot(pred, label='predict')

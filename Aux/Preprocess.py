@@ -83,6 +83,8 @@ class Preprocess:
         if self.verbose >= 2:
             plot_data(self.data, 'scaled data', 'scaled data')
 
+        return self.scaler, self.scaled
+
     def rescale_data(self, pred):
         """transform data to original range"""
 
@@ -91,12 +93,23 @@ class Preprocess:
 
         return self.scaler.inverse_transform(pred.reshape(-1, 1))
 
+    def transform_to_scale(self, data):
+        """transform new data to current scale"""
+
+        if self.verbose >= 1:
+            print("Scaling new data...")
+
+        values = data[self.field].values.reshape(-1,1)
+        values = values.astype('float64')
+
+        return self.scaler.transform(values)
+
     def timeseries_to_supervised(self):
         """Convert timeseries to supervised"""
 
         if self.verbose >= 1:
             print("transforming data to supervised data...")
-        # pdb.set_trace()
+
         columns = pd.DataFrame()
         for xr in reversed(range(1, STEPS + 1)):
             aux = pd.DataFrame({'x': self.scaled[:, 0]}).shift(xr)
@@ -110,13 +123,35 @@ class Preprocess:
             print('Timeseries data: \n', self.scaled)
             plot_data(self.scaled, 'timeseries data')
 
+    def pred_to_supervised(self, data):
+        """Convert prediction data to supervised"""
+
+        if self.verbose >= 1:
+            print("transforming data to supervised data...")
+
+        columns = pd.DataFrame()
+        for xr in range(0, STEPS + 1):
+            name = 'x'+str(xr) if xr < STEPS else 'y'
+            aux = pd.DataFrame({str(name): data[:, 0]}).shift(-xr)
+            columns[str(name)] = aux[str(name)]
+
+        columns.fillna(0, inplace=True)
+        data = columns[:-STEPS + 1]
+        data.fillna(0, inplace=True)
+
+        if self.verbose >= 2:
+            print('Timeseries data: \n', data)
+            plot_data(data, 'timeseries data')
+
+        return data
+
     def split_data(self):
         """Split data into train and test"""
 
         if self.verbose >= 1:
             print("splitting data...")
 
-        split = round(len(self.scaled) * SPLIT)
+        split = round(len(self.scaled[:-12]) * SPLIT)
         train = {
             'x': np.array(self.scaled[['x' + str(x) for x in reversed(range(1, STEPS + 1))]].values)[:split],
             'y': np.array(self.scaled['y'].values)[:split]
@@ -143,6 +178,7 @@ def series_to_supervised(dataset, look_back):
 
 def plot_data(data, title, label=''):
     """plot data"""
+    plt.figure()
     plt.title(title)
     if data is pd:
         data.plot()
