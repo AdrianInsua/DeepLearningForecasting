@@ -17,7 +17,7 @@ def get_arguments():
 
     data_miner_group = parser.add_argument_group('data miner')
     data_miner_group.add_argument('--source', '-f', type=str, default='csv', help='Procedencia datos [\'sql\' | \'csv\' ]')
-    data_miner_group.add_argument('--input_file', '-i', type=str, default='example.csv', help='Localizacion del fichero, solo para  tipo de procedencia \'csv\'')
+    data_miner_group.add_argument('--input_file', '-i', type=str, default='spain_stk.csv', help='Localizacion del fichero, solo para  tipo de procedencia \'csv\'')
     data_miner_group.add_argument('--data_field', '-fi', type=str, help='Field name')
 
     sql_group = parser.add_argument_group('sql options')
