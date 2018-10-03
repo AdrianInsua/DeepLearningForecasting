@@ -25,24 +25,20 @@ np.random.seed(7)
 
 class TimeSeriesPrediction:
     """Time series predicion class"""
-    def __init__(self, train, test, v):
+    def __init__(self, data_shape, v):
         self.verbose = v
         self.model = None
-        self.x_train, self.y_train = train['x'], train['y']
-        self.x_test, self.y_test = test['x'], test['y']
-        self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], 1, self.x_train.shape[1]))
-        self.x_test = np.reshape(self.x_test, (self.x_test.shape[0], 1, self.x_test.shape[1]))
 
-        self.create_model()
+        self.create_model(data_shape)
 
-    def create_model(self):
+    def create_model(self, data_shape):
         """Create prediction model"""
-
+        print(data_shape)
         self.model = Sequential()
         if MODEL == 'LSTM':
             for xl in range(LAYERS):
                 if xl == 0:
-                    self.model.add(LSTM(NEURONS, input_shape=(self.x_train.shape[1], self.x_train.shape[2]), return_sequences=LAYERS > 1))
+                    self.model.add(LSTM(NEURONS, input_shape=(1, data_shape[1]), return_sequences=LAYERS > 1))
                 if LAYERS > 1:
                     self.model.add(LSTM(NEURONS, return_sequences=xl < LAYERS - 1))
                 if xl < LAYERS - 1:
@@ -62,9 +58,7 @@ class TimeSeriesPrediction:
         prev = np.reshape(prev, (prev.shape[0], 1, prev.shape[1]))
         yhat = self.model.predict(prev)
 
-        print(true)
-        print(yhat)
-        yhat = pd.DataFrame(yhat).shift(-1)
+        yhat = pd.DataFrame(yhat)
         yhat.fillna(0, inplace=True)
 
         if self.verbose >= 1:
@@ -75,17 +69,21 @@ class TimeSeriesPrediction:
 
         return yhat.values
 
-    def train(self):
+    def train(self, train, test):
         """Fit a LSTM network to train data"""
 
         if self.verbose >= 1:
             print('Training model...')
+        x_train, y_train = train['x'], train['y']
+        x_test, y_test = test['x'], test['y']
+        x_train = np.reshape(x_train, (x_train.shape[0], 1, x_train.shape[1]))
+        x_test = np.reshape(x_test, (x_test.shape[0], 1, x_test.shape[1]))
 
         cbks = [callbacks.EarlyStopping(monitor='val_loss', patience=24)]
-        hist = self.model.fit(self.x_train, self.y_train, epochs=NB_EPOCH,\
+        hist = self.model.fit(x_train, y_train, epochs=NB_EPOCH,\
          callbacks=cbks, shuffle=False, batch_size=BATCH_SIZE, \
         #  validation_data=(self.x_test, self.y_test),\
-        validation_data=(self.x_test, self.y_test),\
+        validation_data=(x_test, y_test),\
         verbose=1 if self.verbose >= 1 else 0)
         
         if self.verbose >= 1:

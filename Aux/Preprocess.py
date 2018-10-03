@@ -17,10 +17,7 @@ from config import SPLIT, STEPS
 
 class Preprocess:
     """Main class"""
-    def __init__(self, data, field, v):
-        self.data = data
-        self.field = field
-        self.scaled = data[field]
+    def __init__(self, v=1):
         self.scaler = {}
         self.verbose = v
 
@@ -29,61 +26,64 @@ class Preprocess:
 
         self.field = field
 
-    def group_by(self, group='W'):
+    def group_by(self, data, field, group='W'):
         """grouping method"""
 
         if self.verbose >= 1:
-            print('Grouping data by ' + group + '...')
+            print('Grouping data by ' + str(group) + '...')
 
-        self.data[self.field].replace(0, np.nan, inplace=True)
-        self.data[self.field].fillna(method='ffill', inplace=True)
-        self.data[self.field].fillna(method='bfill', inplace=True)
-        self.data.reset_index(inplace=True)
-        self.data['ID_FECHA'] = pd.to_datetime(self.data['ID_FECHA'])
-        self.data = self.data.set_index('ID_FECHA')
-        self.data = self.data.groupby(pd.TimeGrouper(freq=group)).sum()
+        data[field].replace(0, np.nan, inplace=True)
+        data[field].fillna(method='ffill', inplace=True)
+        data[field].fillna(method='bfill', inplace=True)
+        data.reset_index(inplace=True)
+        data['ID_FECHA'] = pd.to_datetime(data['ID_FECHA'])
+        data = data.set_index('ID_FECHA', drop=True)
+        data = data.groupby(pd.TimeGrouper(freq=group)).sum()
 
         if self.verbose >= 2:
-            plot_data(self.data, 'grouped data')
+            plot_data(data, 'grouped data')
 
-    def decompose_seasonality(self):
+        return data
+
+    def decompose_seasonality(self, data, field):
         """decomponse data seasonality"""
 
         if self.verbose >= 1:
             print('Decomposing seasonality...')
 
-        result = seasonal_decompose(self.data[self.field], freq=7)
+        result = seasonal_decompose(data[field], freq=7)
 
-        self.data['seasonal'] = result.seasonal
-        self.data['seasonal'].fillna(method='ffill', inplace=True)
-        self.data['seasonal'].fillna(method='bfill', inplace=True)
-        self.data['trend'] = result.trend
-        self.data['trend'].fillna(method='ffill', inplace=True)
-        self.data['trend'].fillna(method='bfill', inplace=True)
-        self.data['resid'] = result.resid
-        self.data['resid'].fillna(method='ffill', inplace=True)
-        self.data['resid'].fillna(method='bfill', inplace=True)
+        data['seasonal'] = result.seasonal
+        data['seasonal'].fillna(method='ffill', inplace=True)
+        data['seasonal'].fillna(method='bfill', inplace=True)
+        data['trend'] = result.trend
+        data['trend'].fillna(method='ffill', inplace=True)
+        data['trend'].fillna(method='bfill', inplace=True)
+        data['resid'] = result.resid
+        data['resid'].fillna(method='ffill', inplace=True)
+        data['resid'].fillna(method='bfill', inplace=True)
 
         if self.verbose >= 2:
-            plot_data(self.data, 'seasonality data')
             result.plot()
             plt.show()
 
-    def scale_data(self):
+        return data
+
+    def scale_data(self, data, field):
         """transform data to be stationary"""
 
         if self.verbose >= 1:
             print("Scaling data...")
 
-        values = self.data[self.field].values.reshape(-1,1)
+        values = data[field].values.reshape(-1,1)
         values = values.astype('float64')
         self.scaler = MinMaxScaler(feature_range=(0, 1))
-        self.scaled = self.scaler.fit_transform(values)
+        scaled = self.scaler.fit_transform(values)
 
         if self.verbose >= 2:
-            plot_data(self.data, 'scaled data', 'scaled data')
+            plot_data(scaled, 'scaled data', 'scaled data')
 
-        return self.scaler, self.scaled
+        return self.scaler, scaled
 
     def rescale_data(self, pred):
         """transform data to original range"""
@@ -93,35 +93,38 @@ class Preprocess:
 
         return self.scaler.inverse_transform(pred.reshape(-1, 1))
 
-    def transform_to_scale(self, data):
+    def transform_to_scale(self, data, field):
         """transform new data to current scale"""
 
         if self.verbose >= 1:
             print("Scaling new data...")
 
-        values = data[self.field].values.reshape(-1,1)
+        values = data[field].values.reshape(-1,1)
         values = values.astype('float64')
 
         return self.scaler.transform(values)
 
-    def timeseries_to_supervised(self):
+    def timeseries_to_supervised(self, data):
         """Convert timeseries to supervised"""
 
         if self.verbose >= 1:
             print("transforming data to supervised data...")
 
         columns = pd.DataFrame()
+
         for xr in reversed(range(1, STEPS + 1)):
-            aux = pd.DataFrame({'x': self.scaled[:, 0]}).shift(xr)
+            aux = pd.DataFrame({'x': data[:, 0]}).shift(xr)
             columns['x'+str(xr)] = aux.x
         columns.fillna(0, inplace=True)
-        columns['y'] = self.scaled[:,0]
-        self.scaled = columns[:-STEPS + 1]
-        self.scaled.fillna(0, inplace=True)
+        columns['y'] = data[:,0]
+        data = columns[:-STEPS + 1]
+        data.fillna(0, inplace=True)
 
         if self.verbose >= 2:
-            print('Timeseries data: \n', self.scaled)
-            plot_data(self.scaled, 'timeseries data')
+            print('Timeseries data: \n', data)
+            plot_data(data, 'timeseries data')
+
+        return data
 
     def pred_to_supervised(self, data):
         """Convert prediction data to supervised"""
@@ -129,6 +132,7 @@ class Preprocess:
         if self.verbose >= 1:
             print("transforming data to supervised data...")
 
+        # pdb.set_trace()
         columns = pd.DataFrame()
         for xr in range(0, STEPS + 1):
             name = 'x'+str(xr) if xr < STEPS else 'y'
@@ -145,25 +149,26 @@ class Preprocess:
 
         return data
 
-    def split_data(self):
+    def split_data(self, data):
         """Split data into train and test"""
 
         if self.verbose >= 1:
             print("splitting data...")
 
-        split = round(len(self.scaled[:-12]) * SPLIT)
+        split = round(len(data[:-12]) * SPLIT)
         train = {
-            'x': np.array(self.scaled[['x' + str(x) for x in reversed(range(1, STEPS + 1))]].values)[:split],
-            'y': np.array(self.scaled['y'].values)[:split]
+            'x': np.array(data[['x' + str(x) for x in reversed(range(1, STEPS + 1))]].values)[:split],
+            'y': np.array(data['y'].values)[:split]
         }
         test = {
-            'x': np.array(self.scaled[['x' + str(x) for x in reversed(range(1, STEPS + 1))]].values)[split:],
-            'y': np.array(self.scaled['y'].values)[split:]
+            'x': np.array(data[['x' + str(x) for x in reversed(range(1, STEPS + 1))]].values)[split:],
+            'y': np.array(data['y'].values)[split:]
         }
         
         if self.verbose >= 2:
             plot_data(train['x'], 'train split')
             plot_data(test['x'], 'test split')
+
         return train, test
 
 def series_to_supervised(dataset, look_back):
